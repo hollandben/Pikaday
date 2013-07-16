@@ -269,7 +269,7 @@
             year  = instance._y,
             isMinYear = year === opts.minYear,
             isMaxYear = year === opts.maxYear,
-            html = '<div id="'+ opts.id +'" class="pika-title">',
+            html = '<div class="pika-title">',
             prev = true,
             next = true;
 
@@ -451,6 +451,7 @@
         };
 
         self.el = document.createElement('div');
+        self.el.id = opts.id;
         self.el.className = 'pika-single' + (opts.isRTL ? ' is-rtl' : '');
 
         addEvent(self.el, 'mousedown', self._onMouseDown, true);
