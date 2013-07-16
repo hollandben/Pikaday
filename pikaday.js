@@ -135,6 +135,9 @@
      */
     defaults = {
 
+        // id for the datepicker
+        id: 'pikaday',
+
         // bind the picker to a form field
         field: null,
 
@@ -246,7 +249,7 @@
             year  = instance._y,
             isMinYear = year === opts.minYear,
             isMaxYear = year === opts.maxYear,
-            html = '<div class="pika-title">',
+            html = '<div id="'+ opts.id +'" class="pika-title">',
             prev = true,
             next = true;
 
