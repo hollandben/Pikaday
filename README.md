@@ -11,7 +11,9 @@ Pikaday
 
 ![Pikaday Screenshot][screenshot]
 
-**Production ready?** Since version 1.0.0 Pikaday is stable and used in production. If you do however find bugs or have feature requests please submit them to the [GitHub issue tracker][issues].
+**Production ready?** Since version 1.0.0 Pikaday is stable and used in production. If you do however find bugs or have feature requests please submit them to the [GitHub issue tracker][issues].  
+Also see the [changelog](CHANGELOG.md)
+
 
 ## Usage
 
@@ -48,7 +50,8 @@ var picker = new Pikaday({
 field.parentNode.insertBefore(picker.el, field.nextSibling);
 ```
 
-For advanced formatting load [Moment.js][moment] prior to Pikaday:
+For advanced formatting load [Moment.js][moment] prior to Pikaday:  
+See the [moment.js example][] for a full version.
 
 ```html
 <input type="text" id="datepicker" value="9 Oct 2012">
@@ -72,6 +75,7 @@ As the examples demonstrate above
 Pikaday has many useful options:
 
 * `field` bind the datepicker to a form field
+* `trigger` use a different element to trigger opening the datepicker, see [trigger example][] (default to `field`)
 * `bound` automatically show/hide the datepicker on `field` focus (default `true` if `field` is set)
 * `format` the default output format for `.toString()` and `field` value (requires [Moment.js][moment] for advanced formatting)
 * `defaultDate` the initial date to view when first opened
@@ -89,11 +93,13 @@ Pikaday has many useful options:
 
 ## jQuery Plugin
 
-The normal version of Pikaday does not require jQuery, however there is a jQuery plugin version if that floats your boat (see `plugins/pikaday.jquery.js` in the repository). This version requires jQuery, naturally, and can be used like other plugins:
+The normal version of Pikaday does not require jQuery, however there is a jQuery plugin if that floats your boat (see `plugins/pikaday.jquery.js` in the repository). This version requires jQuery, naturally, and can be used like other plugins:  
+See the [jQuery example][] for a full version.
 
 ```html
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-<script src="pikaday.jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="pikaday.js"></script>
+<script src="plugins/pikaday.jquery.js"></script>
 <script>
 
 // activate datepickers for all elements with a class of `datepicker`
@@ -103,6 +109,25 @@ $('.datepicker').pikaday({ firstDay: 1 });
 $('.datepicker').eq(0).pikaday('show').pikaday('gotoYear', 2042);
 
 </script>
+```
+
+## AMD support
+
+If you use a modular script loader than Pikaday is not bound to the global object and will fit nicely in your build process. You can require Pikaday just like any other module.  
+See the [AMD example][] for a full version.
+
+```javascript
+require(['pikaday'], function(Pikaday) {
+    var picker = new Pikaday({ field: document.getElementById('datepicker') });
+});
+```
+The same applies for the jQuery plugin mentioned above.  
+See the [jQuery AMD example][] for a full version.
+
+```javascript
+require(['jquery', 'pikaday.jquery'], function($) {
+    $('#datepicker').pikaday();
+});
 ```
 
 ## Ruby on Rails
@@ -162,6 +187,14 @@ Go to the next or previous month (this will change year if necessary).
 
 Change the year being viewed.
 
+`picker.setMinDate()`
+
+Update the minimum/earliest date that can be selected.
+
+`picker.setMaxDate()`
+
+Update the maximum/latest date that can be selected.
+
 ### Show and hide datepicker
 
 `picker.isVisible()`
@@ -171,6 +204,10 @@ Returns `true` or `false`.
 `picker.show()`
 
 Make the picker visible.
+
+`picker.adjustPosition()`
+
+Recalculate and change the position of the picker.
 
 `picker.hide()`
 
@@ -204,7 +241,8 @@ You must provide 12 months and 7 weekdays (with abbreviations). Always specify w
 Pikaday is a pure datepicker. It will not support picking a time of day. However, there have been efforts to add time support to Pikaday.  
 See [#1][issue1] and [#18][issue18]. These reside in their own fork.
 
-You can use the work [@stas][stas] did at [stas/Pikaday][stas Pika]
+You can use the work [@stas][stas] did at [stas/Pikaday][stas Pika]  
+or the work [@owenmead][owenmead] did more recently at [owenmead/Pikaday][owen Pika] which is based on version 1.1.0.
 
 
 ## Browser Compatibility
@@ -242,3 +280,10 @@ Copyright © 2013 David Bushell | BSD & MIT license
   [issue18]:     https://github.com/dbushell/Pikaday/issues/18                    "Issue 18"
   [stas]:        https://github.com/stas                                          "@stas"
   [stas Pika]:   https://github.com/stas/Pikaday                                  "Pikaday"
+  [owenmead]:     https://github.com/owenmead                                     "@owenmead"
+  [owen Pika]:   https://github.com/owenmead/Pikaday                              "Pikaday"
+  [moment.js example]: http://dbushell.github.com/Pikaday/examples/moment.html    "Pikaday w/ moment.js"
+  [jQuery example]: http://dbushell.github.com/Pikaday/examples/jquery.html       "Pikaday w/ jQuery"
+  [AMD example]: http://dbushell.github.com/Pikaday/examples/amd.html             "Pikaday w/ AMD"
+  [jQuery AMD example]: http://dbushell.github.com/Pikaday/examples/jquery-amd.html "Pikaday w/ jQuery + AMD"
+  [trigger example]: http://dbushell.github.com/Pikaday/examples/trigger.html     "Pikaday using custom trigger"

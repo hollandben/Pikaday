@@ -1,18 +1,38 @@
 /*!
  * Pikaday
- * Copyright © 2012 David Bushell | BSD & MIT license | http://dbushell.com/
+ *
+ * Copyright © 2013 David Bushell | BSD & MIT license | https://github.com/dbushell/Pikaday
  */
 
-(function(window, document, undefined)
+(function (root, define, factory)
+{
+    'use strict';
+
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(function (req)
+        {
+            // Load moment.js as an optional dependency
+            var id = 'moment';
+            var moment = req.defined && req.defined(id) ? req(id) : undefined;
+            return factory(moment || root.moment);
+        });
+    } else {
+        // Browser global
+        root.Pikaday = factory(root.moment);
+    }
+}(window, window.define, function (moment)
 {
     'use strict';
 
     /**
      * feature detection and helper functions
      */
-    var hasMoment = typeof window.moment === 'function',
+    var hasMoment = typeof moment === 'function',
 
     hasEventListeners = !!window.addEventListener,
+
+    document = window.document,
 
     sto = window.setTimeout,
 
@@ -293,13 +313,13 @@
     renderTable = function(opts, data)
     {
         return '<table cellpadding="0" cellspacing="0" class="pika-table">' + renderHead(opts) + renderBody(data) + '</table>';
-    };
+    },
 
 
     /**
      * Pikaday constructor
      */
-    window.Pikaday = function(options)
+    Pikaday = function(options)
     {
         var self = this,
             opts = self.config(options);
@@ -367,8 +387,8 @@
                 return;
             }
             if (hasMoment) {
-                date = window.moment(opts.field.value, opts.format);
-                date = date ? date.toDate() : null;
+                date = moment(opts.field.value, opts.format);
+                date = (date && date.isValid()) ? date.toDate() : null;
             }
             else {
                 date = new Date(Date.parse(opts.field.value));
@@ -425,7 +445,7 @@
                 }
             }
             while ((pEl = pEl.parentNode));
-            if (self._v && target !== opts.field) {
+            if (self._v && target !== opts.trigger) {
                 self.hide();
             }
         };
@@ -446,7 +466,7 @@
 
             if (!opts.defaultDate) {
                 if (hasMoment && opts.field.value) {
-                    opts.defaultDate = window.moment(opts.field.value, opts.format).toDate();
+                    opts.defaultDate = moment(opts.field.value, opts.format).toDate();
                 } else {
                     opts.defaultDate = new Date(Date.parse(opts.field.value));
                 }
@@ -469,9 +489,9 @@
         if (opts.bound) {
             this.hide();
             self.el.className += ' is-bound';
-            addEvent(opts.field, 'click', self._onInputClick);
-            addEvent(opts.field, 'focus', self._onInputFocus);
-            addEvent(opts.field, 'blur', self._onInputBlur);
+            addEvent(opts.trigger, 'click', self._onInputClick);
+            addEvent(opts.trigger, 'focus', self._onInputFocus);
+            addEvent(opts.trigger, 'blur', self._onInputBlur);
         } else {
             this.show();
         }
@@ -482,7 +502,7 @@
     /**
      * public Pikaday API
      */
-    window.Pikaday.prototype = {
+    Pikaday.prototype = {
 
 
         /**
@@ -501,6 +521,8 @@
             opts.field = (opts.field && opts.field.nodeName) ? opts.field : null;
 
             opts.bound = !!(opts.bound !== undefined ? opts.field && opts.bound : opts.field);
+
+            opts.trigger = (opts.trigger && opts.trigger.nodeName) ? opts.trigger : opts.field;
 
             var nom = parseInt(opts.numberOfMonths, 10) || 1;
             opts.numberOfMonths = nom > 4 ? 4 : nom;
@@ -544,7 +566,7 @@
          */
         toString: function(format)
         {
-            return !isDate(this._d) ? '' : hasMoment ? window.moment(this._d).format(format || this._o.format) : this._d.toDateString();
+            return !isDate(this._d) ? '' : hasMoment ? moment(this._d).format(format || this._o.format) : this._d.toDateString();
         },
 
         /**
@@ -552,7 +574,7 @@
          */
         getMoment: function()
         {
-            return hasMoment ? window.moment(this._d) : null;
+            return hasMoment ? moment(this._d) : null;
         },
 
         /**
@@ -560,7 +582,7 @@
          */
         setMoment: function(date)
         {
-            if (hasMoment && window.moment.isMoment(date)) {
+            if (hasMoment && moment.isMoment(date)) {
                 this.setDate(date.toDate());
             }
         },
@@ -670,6 +692,22 @@
         },
 
         /**
+         * change the minDate
+         */
+        setMinDate: function(value)
+        {
+            this._o.minDate = value;
+        },
+
+        /**
+         * change the maxDate
+         */
+        setMaxDate: function(value)
+        {
+            this._o.maxDate = value;
+        },
+
+        /**
          * refresh the HTML
          */
         draw: function(force)
@@ -699,17 +737,12 @@
             this.el.innerHTML = renderTitle(this) + this.render(this._y, this._m);
 
             if (opts.bound) {
-                var pEl  = opts.field,
-                    left = pEl.offsetLeft,
-                    top  = pEl.offsetTop + pEl.offsetHeight;
-                while((pEl = pEl.offsetParent)) {
-                    left += pEl.offsetLeft;
-                    top  += pEl.offsetTop;
+                this.adjustPosition();
+                if(opts.field.type !== 'hidden') {
+                    sto(function() {
+                        opts.trigger.focus();
+                    }, 1);
                 }
-                this.el.style.cssText = 'position:absolute;left:' + left + 'px;top:' + top + 'px;';
-                sto(function() {
-                    opts.field.focus();
-                }, 1);
             }
 
             if (typeof this._o.onDraw === 'function') {
@@ -718,6 +751,37 @@
                     self._o.onDraw.call(self);
                 }, 0);
             }
+        },
+
+        adjustPosition: function()
+        {
+            var field = this._o.trigger, pEl = field,
+            width = this.el.offsetWidth, height = this.el.offsetHeight,
+            viewportWidth = window.innerWidth || document.documentElement.clientWidth,
+            viewportHeight = window.innerHeight || document.documentElement.clientHeight,
+            scrollTop = window.pageYOffset || document.body.scrollTop || document.documentElement.scrollTop,
+            left, top, clientRect;
+
+            if (typeof field.getBoundingClientRect === 'function') {
+                clientRect = field.getBoundingClientRect();
+                left = clientRect.left + window.pageXOffset;
+                top = clientRect.bottom + window.pageYOffset;
+            } else {
+                left = pEl.offsetLeft;
+                top  = pEl.offsetTop + pEl.offsetHeight;
+                while((pEl = pEl.offsetParent)) {
+                    left += pEl.offsetLeft;
+                    top  += pEl.offsetTop;
+                }
+            }
+
+            if (left + width > viewportWidth) {
+                left = left - width + field.offsetWidth;
+            }
+            if (top + height > viewportHeight + scrollTop) {
+                top = top - height - field.offsetHeight;
+            }
+            this.el.style.cssText = 'position:absolute;left:' + left + 'px;top:' + top + 'px;';
         },
 
         /**
@@ -810,9 +874,9 @@
             if (this._o.field) {
                 removeEvent(this._o.field, 'change', this._onInputChange);
                 if (this._o.bound) {
-                    removeEvent(this._o.field, 'click', this._onInputClick);
-                    removeEvent(this._o.field, 'focus', this._onInputFocus);
-                    removeEvent(this._o.field, 'blur', this._onInputBlur);
+                    removeEvent(this._o.trigger, 'click', this._onInputClick);
+                    removeEvent(this._o.trigger, 'focus', this._onInputFocus);
+                    removeEvent(this._o.trigger, 'blur', this._onInputBlur);
                 }
             }
             if (this.el.parentNode) {
@@ -822,4 +886,6 @@
 
     };
 
-})(window, window.document);
+    return Pikaday;
+
+}));
